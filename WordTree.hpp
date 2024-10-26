@@ -17,6 +17,8 @@ class WordTree
 {
 private:
 	std::array<std::shared_ptr<TreeNode>, 26> tree;
+	
+	size_t recursiveSize(std::shared_ptr<TreeNode> node);
 
 public:
 	void add(std::string word);
@@ -26,7 +28,7 @@ public:
 	//std::vector<std::string> predict(std::string partial, std::uint8_t howMany);
 
 	//Returns the number of words in the tree
-	//std::size_t size();
+	std::size_t size();
 
 };
 

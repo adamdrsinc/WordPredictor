@@ -35,5 +35,5 @@ int main()
 {
     auto wordTree = readDictionary("dictionary.txt");
 
-	std::cout << 1 << std::endl;
+	std::cout << wordTree->size() << std::endl;
 }

@@ -62,6 +62,7 @@ void WordTree::add(std::string word) {
 	}
 }
 
+
 //bool WordTree::find(std::string word) {
 //}
 //
@@ -71,6 +72,42 @@ void WordTree::add(std::string word) {
 //}
 //	
 ////Returns the number of words in the tree
-//std::size_t WordTree::size() {
-//
-//}
+
+std::size_t WordTree::size() {
+	size_t count = 0;
+
+	for (int i = 0; i < 26; i++)
+	{
+		if (tree[i] != nullptr)
+		{
+			count += recursiveSize(tree[i]);
+		}
+	}
+
+	return count;
+}
+
+std::size_t WordTree::recursiveSize(std::shared_ptr<TreeNode> node) {
+
+	if (node == nullptr)
+	{
+		return 0;
+	}
+
+	size_t count = 0;
+
+	if (node->endOfWord) 
+	{
+		count++;
+	}
+
+	for (int i = 0; i < 26; i++)
+	{
+		if (node->children[i] != nullptr)
+		{
+			count += recursiveSize(node->children[i]);
+		}
+	}
+
+	return count;
+}

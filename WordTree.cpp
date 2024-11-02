@@ -1,113 +1,269 @@
 #include "WordTree.hpp"
 
-void WordTree::add(std::string word) {
-	//If word is empty, ignore it
-	if (word.size() <= 0)
-	{
-		return;
-	}
+void WordTree::add(std::string word)
+{
+    // If word is empty, ignore it
+    if (word.size() <= 0)
+    {
+        return;
+    }
 
-	for (int i = 0; i < word.length(); i++)
-	{
-		char c = word[i];
+    if (!std::all_of(word.begin(), word.end(), [](unsigned char c)
+                     {
+                         return std::isalpha(c);
+                     }))
+    {
+        return;
+    }
 
-		//If word contains non-alphabetic characters, ignore it
-		if (!std::isalpha(c))
-		{
-			return;
-		}
+    for (size_t i = 0; i < word.length(); i++)
+    {
+        char c = word[i];
+        word[i] = tolower(c);
+    }
 
-		word[i] = tolower(c);
-	}
+    size_t idx = getLetterIndex(word[0]);
+    // std::shared_ptr<TreeNode> currentNode = tree[idx];
 
+    std::shared_ptr<TreeNode> currentNode;
 
-		/*
-	Get array of nodes
-	Check if node corresponding to letter exists
-		If it does, traverse to that node
-		If it doesn't, create a new node and traverse to that node
-	At the end, set boolean to true
-	*/
+    if (tree[idx] != nullptr)
+    {
+        currentNode = tree[idx];
+    }
+    else
+    {
+        tree[idx] = std::make_shared<TreeNode>();
+        currentNode = tree[idx];
+    }
 
-	int idx = word[0] - 97;
-	std::shared_ptr<TreeNode> currentNode = tree[idx];
+    for (size_t i = 1; i <= word.size(); i++)
+    {
+        if (i == word.size())
+        {
+            currentNode->endOfWord = true;
+            break;
+        }
 
-	if (tree[idx] == nullptr)
-	{
-		tree[idx] = std::make_shared<TreeNode>();
-		currentNode = tree[idx];
-	}
+        // apple
+        // a p p l e
+        // 0 1 2 3 4
+        //   1 2 3 4
 
+        size_t idx = getLetterIndex(word[i]);
 
-	for (int i = 1; i <= word.size(); i++)
-	{
-		if (i == word.size())
-		{
-			currentNode->children[idx] = std::make_shared<TreeNode>();
-			currentNode->endOfWord = true;
-			break;
-		}
-
-		int idx = word[i] - 97;
-
-		if (currentNode->children[idx] != nullptr)
-		{
-			currentNode = currentNode->children[idx];
-		}
-		else
-		{
-			currentNode->children[idx] = std::make_shared<TreeNode>();
-			currentNode = currentNode->children[idx];
-		}
-	}
+        if (currentNode->children[idx] != nullptr)
+        {
+            currentNode = currentNode->children[idx];
+        }
+        else
+        {
+            currentNode->children[idx] = std::make_shared<TreeNode>();
+            currentNode = currentNode->children[idx];
+        }
+    }
 }
 
+size_t WordTree::getLetterIndex(const unsigned char letter)
+{
+    if (letter >= 'a' && letter <= 'z')
+    {
+        return static_cast<size_t>(letter - 'a');
+    }
 
-//bool WordTree::find(std::string word) {
-//}
-//
-////Given the partial word, returns up to howMany predicted words
-//std::vector<std::string> WordTree::predict(std::string partial, std::uint8_t howMany) {
-//
-//}
-//	
-////Returns the number of words in the tree
-
-std::size_t WordTree::size() {
-	size_t count = 0;
-
-	for (int i = 0; i < 26; i++)
-	{
-		if (tree[i] != nullptr)
-		{
-			count += recursiveSize(tree[i]);
-		}
-	}
-
-	return count;
+    return -1;
 }
 
-std::size_t WordTree::recursiveSize(std::shared_ptr<TreeNode> node) {
+bool WordTree::find(std::string word)
+{
+    if (word.length() <= 0)
+    {
+        return false;
+    }
 
-	if (node == nullptr)
-	{
-		return 0;
-	}
+    if (!std::all_of(word.begin(), word.end(), [](unsigned char c)
+                     {
+                         return std::isalpha(c);
+                     }))
+    {
+        return false;
+    }
 
-	size_t count = 0;
+    for (size_t i = 0; i < word.length(); i++)
+    {
+        char c = word[i];
+        word[i] = tolower(c);
+    }
 
-	if (node->endOfWord) 
-	{
-		count++;
-	}
+    auto currentNode = tree[getLetterIndex(word[0])];
+    if (currentNode == nullptr)
+    {
+        return false;
+    }
 
-	for (int i = 0; i < 26; i++)
-	{
-		if (node->children[i] != nullptr)
-		{
-			count += recursiveSize(node->children[i]);
-		}
-	}
+    if (word.size() == 1)
+    {
+        if (currentNode->endOfWord)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
-	return count;
+    for (size_t i = 1; i < word.size(); i++)
+    {
+        size_t idx = getLetterIndex(word[i]);
+
+        if (i == word.size() - 1)
+        {
+            if (currentNode->children[idx] != nullptr)
+            {
+                if (currentNode->children[idx]->endOfWord)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        if (currentNode->children[idx] != nullptr)
+        {
+            currentNode = currentNode->children[idx];
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    return false;
+}
+
+// barss
+std::vector<std::string> WordTree::predict(std::string partial, std::uint8_t howMany)
+{
+
+    if (partial.size() <= 0)
+    {
+        return {};
+    }
+
+    if (!std::all_of(partial.begin(), partial.end(), [](unsigned char c)
+                     {
+                         return std::isalpha(c);
+                     }))
+    {
+        return {};
+    }
+
+    if (tree.size() <= 0)
+    {
+        return {};
+    }
+
+    for (size_t i = 0; i < partial.size(); i++)
+    {
+        partial[i] = tolower(partial[i]);
+    }
+
+    auto currentNode = tree[getLetterIndex(partial[0])];
+
+    if (currentNode == nullptr)
+    {
+        return {};
+    }
+
+    const std::uint8_t alphChar{ 26 };
+
+    for (size_t i = 1; i < partial.size(); i++)
+    {
+        size_t idx = getLetterIndex(partial[i]);
+        currentNode = currentNode->children[idx];
+        if (currentNode == nullptr)
+        {
+            return {};
+        }
+    }
+
+    std::queue<std::pair<std::shared_ptr<TreeNode>, std::string>> nodeQueue;
+    std::vector<std::string> predictedWords;
+
+    nodeQueue.push(std::make_pair(currentNode, partial));
+
+    while (!nodeQueue.empty() && predictedWords.size() < howMany)
+    {
+        auto theNode = nodeQueue.front().first;
+        auto theWord = nodeQueue.front().second;
+
+        nodeQueue.pop();
+
+        if (theNode->endOfWord)
+        {
+            if (theWord != partial)
+            {
+                predictedWords.emplace_back(theWord);
+            }
+        }
+
+        for (size_t i = 0; i < alphChar; i++)
+        {
+            if (theNode->children[i] != nullptr)
+            {
+                nodeQueue.push(std::make_pair(theNode->children[i], theWord + static_cast<char>(i + 'a')));
+            }
+        }
+    }
+
+    return predictedWords;
+}
+
+std::size_t WordTree::size()
+{
+    size_t count = 0;
+
+    for (int i = 0; i < 26; i++)
+    {
+        if (tree[i] != nullptr)
+        {
+            count += recursiveSize(tree[i]);
+        }
+    }
+
+    return count;
+}
+
+std::size_t WordTree::recursiveSize(std::shared_ptr<TreeNode> node)
+{
+
+    if (node == nullptr)
+    {
+        return 0;
+    }
+
+    size_t count = 0;
+
+    if (node->endOfWord)
+    {
+        count++;
+    }
+
+    for (int i = 0; i < 26; i++)
+    {
+        if (node->children[i] != nullptr)
+        {
+            count += recursiveSize(node->children[i]);
+        }
+    }
+
+    return count;
 }
